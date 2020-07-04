@@ -1,0 +1,108 @@
+Urban Sports Club is amazing. Sadly, their android app isn't that nice when it comes to finding things to do.
+
+This is a simple SPA that allows for better filtering of venues and events.
+
+* getting the data
+** robots
+https://urbansportsclub.com/robots.txt does not forbid robots for any endpoints of interest
+#+begin_src
+User-agent: *
+Disallow: /membership
+Disallow: /reservations
+Disallow: /account
+Disallow: /rev.txt
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: spider@seoscanners.net
+Disallow: /
+#+end_src
+** finding the api
+1. decompile using  [[https://ibotpeaches.github.io/Apktool/][apktool]]
+2. find and grep for string constants
+   - =grep urbansportsclub.com . -r= gives us https://api.urbansportsclub.com
+   - =find . -ipath '*urbansportsclub*api*'= gives us =CourseApi.smali= and =VenueApi.smali= \\
+     In the smali files it's pretty easy to recognize the path and query parameter string constants
+3. ???
+* random data exploration
+#+PROPERTY: header-args :db stadtsport.sqlite :colnames yes
+** venues with most classes
+#+begin_src sqlite
+SELECT
+       v.Name,
+       count(DISTINCT e.Name) AS Classes,
+       count(DISTINCT (e.Name || strftime('%w', e.Date) || e.StartTime || e.EndTime || e.VenueID || e.Plans || e.Type)) AS Events
+FROM venues v JOIN events e ON v.ID = e.VenueID
+WHERE e.Type = 'class'
+GROUP BY v.ID
+ORDER BY Classes DESC, Events DESC
+LIMIT 10;
+#+end_src
+
+#+RESULTS:
+| Name                          | Classes | Events |
+|-------------------------------+---------+--------|
+| Ballett Centrum               |      69 |     73 |
+| Green Yoga Kreuzberg Open Air |      68 |    119 |
+| yogafürdich - Friedrichshain  |      68 |     78 |
+| yogafürdich - Schöneberg      |      61 |     70 |
+| myshape                       |      60 |    121 |
+| yogatribe                     |      60 |     60 |
+| Lotos Yoga - Mainzer Straße   |      56 |     89 |
+| yogafürdich - Kreuzberg       |      51 |     66 |
+| Yellow Yoga - Online          |      50 |     58 |
+| Green Yoga                    |      49 |    140 |
+** category with most venues / events
+#+begin_src sqlite
+SELECT
+        CategoryName,
+        COUNT(DISTINCT VenueId) AS Venues,
+        count(DISTINCT (Name || strftime('%w', Date) || StartTime || EndTime || VenueID || Plans || Type)) AS Events
+FROM events
+GROUP BY CategoryName
+ORDER BY Venues DESC
+LIMIT 10;
+#+end_src
+
+#+RESULTS:
+| CategoryName        | Venues | Events |
+|---------------------+--------+--------|
+| Yoga                |    444 |   4110 |
+| Fitness             |    246 |   2296 |
+| Dance               |    150 |   1360 |
+| Pilates             |    121 |    733 |
+| Functional Training |    102 |    850 |
+| Massage             |     95 |    630 |
+| EMS                 |     39 |    270 |
+| Meditation          |     39 |    264 |
+| EMS Cardio          |     36 |    245 |
+| Qi Gong and Tai Chi |     34 |    211 |
+** districts with most venues
+#+begin_src sqlite
+SELECT
+       district,
+       COUNT(DISTINCT postalcode) AS ZipCodes,
+       COUNT(*) AS Venues
+FROM venues
+GROUP BY district
+ORDER BY Venues DESC
+LIMIT 10;
+#+end_src
+
+#+RESULTS:
+| District        | ZipCodes | Venues |
+|-----------------+----------+--------|
+| Kreuzberg       |       17 |    277 |
+| Prenzlauer Berg |       13 |    168 |
+| Friedrichshain  |       10 |    108 |
+| Mitte           |       19 |    108 |
+| Neukölln        |       14 |    100 |
+| Schöneberg      |       13 |     62 |
+| Charlottenburg  |       18 |     57 |
+| Wedding         |        8 |     51 |
+| Pankow          |        8 |     35 |
+| Treptow         |        4 |     32 |

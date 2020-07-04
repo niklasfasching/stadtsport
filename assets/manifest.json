@@ -1,0 +1,8 @@
+{
+  "name": "Stadtsport",
+  "short_name": "stdsprt",
+  "display": "standalone",
+  "icons": [{"src": "/icon.png","type": "image/png","sizes": "400x400"}],
+  "start_url": "/",
+  "description": "icon from: https://uxwing.com/license/"
+}
