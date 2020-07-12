@@ -79,6 +79,7 @@ func (s *Server) urbanSportsImport() error {
 	if err := tx.Commit(); err != nil {
 		return err
 	}
+	log.Println("finished import")
 	return s.db.SetVersion(int(time.Now().Unix()))
 }
 
@@ -151,8 +152,8 @@ func events(c gosql.Connection, url string) error {
 }
 
 type venue struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
+	ID       interface{} `json:"id"`
+	Name     string      `json:"name"`
 	Location struct {
 		District struct {
 			Name string `json:"name"`
@@ -170,11 +171,11 @@ type venue struct {
 }
 
 type event struct {
-	ID        int    `json:"id"`
-	Name      string `json:"title"`
-	Date      string `json:"date"`
-	StartTime string `json:"startTime"`
-	EndTime   string `json:"endTime"`
+	ID        interface{} `json:"id"`
+	Name      string      `json:"title"`
+	Date      string      `json:"date"`
+	StartTime string      `json:"startTime"`
+	EndTime   string      `json:"endTime"`
 	Venue     struct {
 		ID int `json:"id"`
 	}
